@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>符文之地 · 2024 世界大賽決賽 — 逆轉的賽局</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root{
+    --gold:#c8aa6e; --gold-2:#f0e6d2; --blue:#0ac8b9; --bg:#06090d;
+    --panel:rgba(10,16,22,.88); --line:rgba(200,170,110,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--gold-2); overflow:hidden;
+    font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- 背景 ---------- */
+  .bg{position:fixed;inset:0;z-index:0;transition:opacity .8s}
+  .bg img{width:100%;height:100%;object-fit:cover;object-position:50% 22%;filter:saturate(.9) contrast(1.05)}
+  .bg::after{content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(120% 80% at 70% 20%, rgba(10,200,185,.10), transparent 60%),
+      linear-gradient(105deg, rgba(4,7,10,.97) 0%, rgba(4,7,10,.86) 42%, rgba(4,7,10,.62) 70%, rgba(4,7,10,.9) 100%);
+  }
+  /* ---------- 外框 ---------- */
+  .frame{position:fixed;left:50%;top:50%;z-index:2;width:1600px;height:900px;display:grid;transform-origin:center center;transform:translate(-50%,-50%) scale(1);
+    grid-template-rows:56px 1fr 34px;grid-template-columns:296px 1fr 268px;}
+
+  /* 頂欄 */
+  .topbar{grid-column:1/-1;display:flex;align-items:center;gap:26px;padding:0 20px;
+    background:linear-gradient(180deg,rgba(6,10,14,.98),rgba(6,10,14,.72));
+    border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.14em;font-size:13px;color:var(--gold)}
+  .brand .mark{width:26px;height:26px;border:1px solid var(--gold);transform:rotate(45deg);
+    box-shadow:0 0 14px rgba(200,170,110,.35) inset}
+  .tabs{display:flex;gap:4px}
+  .tab{padding:6px 16px;font-size:12.5px;letter-spacing:.18em;color:#8b938f;position:relative;cursor:default}
+  .tab.on{color:var(--gold-2)}
+  .tab.on::after{content:"";position:absolute;left:12%;right:12%;bottom:-1px;height:2px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .me{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:#9aa3a0}
+  .me b{color:var(--gold-2);font-weight:600;letter-spacing:.06em}
+
+  /* 左側目錄 */
+  .side{padding:18px 14px 10px;border-right:1px solid rgba(200,170,110,.14);
+    background:linear-gradient(180deg,rgba(6,10,14,.72),rgba(6,10,14,.5));overflow:auto}
+  .side h4{font-size:10.5px;letter-spacing:.34em;color:#6d7674;margin:0 6px 12px}
+  .chap{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;margin-bottom:2px;
+    border-left:2px solid transparent;cursor:pointer;transition:.18s;color:#8e9794}
+  .chap .n{font-family:Consolas,monospace;font-size:10px;color:#5c6663;padding-top:2px}
+  .chap .t{font-size:12.5px;letter-spacing:.05em;line-height:1.45}
+  .chap:hover{color:var(--gold-2);background:rgba(200,170,110,.05)}
+  .chap.on{border-left-color:var(--gold);background:linear-gradient(90deg,rgba(200,170,110,.14),transparent);
+    color:var(--gold-2)}
+  .chap.on .n{color:var(--gold)}
+  .side .foot{margin-top:16px;padding:10px 8px 0;border-top:1px solid rgba(200,170,110,.14);
+    font-size:10.5px;line-height:1.7;color:#5f6966}
+
+  /* 主舞台 */
+  .stage{position:relative;overflow:hidden}
+  .slide{position:absolute;inset:0;padding:52px 56px;display:none}
+  .slide.show{display:block;animation:in .55s cubic-bezier(.2,.8,.25,1) both}
+  @keyframes in{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  .kicker{display:flex;align-items:center;gap:12px;font-size:11px;letter-spacing:.36em;
+    color:var(--gold);margin-bottom:18px}
+  .kicker::before{content:"";width:34px;height:1px;background:var(--gold);opacity:.7}
+  h1{font-size:74px;line-height:1.02;letter-spacing:.03em;font-weight:800;
+    background:linear-gradient(180deg,#fff8e8,#d9c49a 62%,#a98b52);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 60px rgba(200,170,110,.12)}
+  h2{font-size:40px;line-height:1.15;letter-spacing:.02em;font-weight:700;color:#f4ecdd;margin-bottom:8px}
+  h2 em{font-style:normal;color:var(--gold)}
+  .sub{font-size:15px;color:#9aa5a2;letter-spacing:.08em;margin-top:14px;line-height:1.9;max-width:760px}
+  .rule{height:1px;background:linear-gradient(90deg,var(--gold),transparent);margin:22px 0 26px}
+
+  /* 卡片 */
+  .cards{display:grid;gap:14px}
+  .card{position:relative;padding:18px 20px;background:var(--panel);
+    border:1px solid rgba(200,170,110,.2);border-top:1px solid rgba(200,170,110,.45);
+    backdrop-filter:blur(6px)}
+  .card .lb{font-size:10.5px;letter-spacing:.3em;color:var(--gold);margin-bottom:8px}
+  .card p{font-size:13.5px;line-height:1.85;color:#b8c2bf}
+  .card b{color:#fff}
+
+  /* 英雄卡 */
+  .heroes{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:6px;
+    height:calc(100vh - 350px);min-height:320px}
+  .hero{position:relative;height:100%;min-height:280px;overflow:hidden;border:1px solid rgba(200,170,110,.25);
+    cursor:default;background:#0b1116}
+  .hero img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;
+    transform:scale(1.02);transition:.6s;filter:saturate(.95)}
+  .hero:hover img{transform:scale(1.09);filter:saturate(1.15) brightness(1.08)}
+  .hero .cap{position:absolute;inset:auto 0 0 0;padding:26px 12px 10px;
+    background:linear-gradient(0deg,rgba(4,7,10,.96),transparent);
+    font-size:13px;letter-spacing:.06em}
+  .hero .cap small{display:block;font-size:10px;letter-spacing:.24em;color:var(--gold);margin-bottom:3px}
+  .hero.big{outline:1px solid var(--gold);box-shadow:0 0 34px rgba(200,170,110,.22)}
+  .hero.big::before{content:"MVP";position:absolute;top:8px;left:8px;z-index:3;font-size:9.5px;
+    letter-spacing:.24em;padding:3px 7px;background:var(--gold);color:#0a0e12;font-weight:700}
+
+  /* 地圖 */
+  .mapwrap{display:grid;grid-template-columns:1fr 320px;gap:26px;align-items:start}
+  .map{position:relative;aspect-ratio:1/.92;border:1px solid rgba(200,170,110,.25);
+    background:
+      radial-gradient(60% 60% at 50% 50%, rgba(10,200,185,.10), transparent 70%),
+      linear-gradient(160deg,#0c151b,#08100f 60%,#0a1114);
+    overflow:hidden}
+  .map::before{content:"";position:absolute;inset:0;opacity:.5;
+    background-image:linear-gradient(rgba(200,170,110,.07) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(200,170,110,.07) 1px,transparent 1px);
+    background-size:44px 44px}
+  .lane{position:absolute;background:linear-gradient(90deg,rgba(200,170,110,.16),rgba(200,170,110,.05))}
+  .lane.mid{top:0;bottom:0;left:calc(50% - 15px);width:30px;
+    background:linear-gradient(180deg,rgba(10,200,185,.20),rgba(200,170,110,.10))}
+  .river{position:absolute;left:-10%;top:-10%;width:120%;height:120%;
+    background:linear-gradient(115deg,transparent 42%,rgba(10,200,185,.13) 47%,
+      rgba(10,120,140,.18) 50%,rgba(10,200,185,.13) 53%,transparent 58%);
+    filter:blur(1px)}
+  .base{position:absolute;width:46px;height:46px;border-radius:50%;transform:translate(-50%,-50%)}
+  .base.b{left:16%;top:80%;border:1px solid rgba(10,200,185,.5);
+    background:radial-gradient(circle,rgba(10,200,185,.22),transparent 70%)}
+  .base.r{left:84%;top:20%;border:1px solid rgba(224,90,79,.5);
+    background:radial-gradient(circle,rgba(224,90,79,.2),transparent 70%)}
+
+  .node{position:absolute;width:14px;height:14px;border-radius:50%;
+    background:var(--gold);box-shadow:0 0 0 4px rgba(200,170,110,.16),0 0 22px var(--gold);
+    transform:translate(-50%,-50%);animation:pulse 2.6s ease-in-out infinite}
+  .node.blue{background:var(--blue);box-shadow:0 0 0 4px rgba(10,200,185,.16),0 0 22px var(--blue)}
+  .node.red{background:#e05a4f;box-shadow:0 0 0 4px rgba(224,90,79,.16),0 0 22px #e05a4f}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+  .node span{position:absolute;left:22px;top:-6px;white-space:nowrap;font-size:10.5px;
+    letter-spacing:.16em;color:#cfd7d4;background:rgba(4,7,10,.72);padding:2px 7px;
+    border-left:1px solid var(--gold)}
+
+  /* 比分板 */
+  .score{display:flex;align-items:center;gap:18px;padding:16px 18px;background:var(--panel);
+    border:1px solid rgba(200,170,110,.22)}
+  .score .t{font-size:13px;letter-spacing:.16em;color:#93a09c}
+  .score .v{font-size:40px;font-weight:800;color:#fff;font-family:Consolas,monospace;line-height:1}
+  .score .v.win{color:var(--gold)}
+  .score .mid{font-size:11px;letter-spacing:.3em;color:#5f6966}
+
+  /* 數據列 */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
+  .stat{padding:16px;border:1px solid rgba(200,170,110,.18);background:rgba(10,16,22,.6)}
+  .stat .k{font-size:10.5px;letter-spacing:.26em;color:var(--gold);margin-bottom:8px}
+  .stat .v{font-size:30px;font-weight:800;font-family:Consolas,monospace;color:#fff;line-height:1}
+  .stat .d{font-size:11.5px;color:#8d9794;margin-top:8px;line-height:1.6}
+
+  /* 引言 */
+  .quote{max-width:900px;font-size:30px;line-height:1.75;letter-spacing:.02em;color:#f2e9d8}
+  .quote::before{content:"“";color:var(--gold);font-size:64px;line-height:0;vertical-align:-18px;margin-right:6px}
+  .who{margin-top:24px;font-size:12px;letter-spacing:.28em;color:var(--gold)}
+
+  /* 右欄 */
+  .rail{grid-column:3;border-left:1px solid rgba(200,170,110,.14);padding:16px 14px;
+    background:linear-gradient(180deg,rgba(6,10,14,.72),rgba(6,10,14,.5));font-size:11.5px}
+  .rail h5{font-size:10px;letter-spacing:.3em;color:#6d7674;margin-bottom:10px}
+  .rail .row{display:flex;justify-content:space-between;padding:7px 0;
+    border-bottom:1px dashed rgba(200,170,110,.13);color:#9aa5a2;letter-spacing:.04em}
+  .rail .row b{color:#e8e0cf;font-weight:600}
+  .rail .note{margin-top:14px;font-size:10.5px;line-height:1.8;color:#5f6966}
+
+  /* 底欄 */
+  .bottom{grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:0 20px;
+    border-top:1px solid rgba(200,170,110,.14);background:rgba(6,10,14,.8);font-size:11px;color:#6d7674}
+  .bar{flex:1;height:2px;background:rgba(200,170,110,.14);position:relative}
+  .bar i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--gold),var(--blue));
+    transition:width .4s ease}
+  #rot{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;\n    background:rgba(4,7,10,.92);color:#c8aa6e;font-size:16px;letter-spacing:.24em}\n  .keys span{border:1px solid rgba(200,170,110,.28);padding:1px 6px;margin-left:6px;color:#9aa5a2}
+</style>
+</head>
+<body>
+
+<div class="bg" id="bg"><img id="bgimg" alt=""></div>
+
+<div class="frame">
+  <div class="topbar">
+    <div class="brand"><div class="mark"></div>RIFT&nbsp;ANALYSIS</div>
+    <div class="tabs">
+      <div class="tab">對局</div>
+      <div class="tab on">世界大賽</div>
+      <div class="tab">英雄</div>
+      <div class="tab">符文</div>
+      <div class="tab">賽局</div>
+    </div>
+    <div class="me"><b>magatalent</b><span>· Lv.173</span></div>
+  </div>
+
+  <div class="side" id="side"></div>
+
+  <div class="stage" id="stage">
+
+    <!-- 1 -->
+    <section class="slide" data-bg="Sylas_0.jpg" data-ch="序章">
+      <div class="kicker">WORLDS 2024 · GRAND FINAL · O2 ARENA, LONDON</div>
+      <h1>逆轉的<br>賽局</h1>
+      <div class="sub">T1 對 BLG · 2024 年 11 月 2 日 · BO5 決賽<br>
+        Game 4：Faker 的賽勒斯，一次偷來的大絕，把 2–1 的落後變成 3–2 的冠軍。</div>
+      <div class="rule"></div>
+      <div class="stats">
+        <div class="stat"><div class="k">SERIES</div><div class="v">3 : 2</div><div class="d">T1 奪下隊史第五冠</div></div>
+        <div class="stat"><div class="k">GAME 4</div><div class="v">27:00</div><div class="d">追平比數的那一局</div></div>
+        <div class="stat"><div class="k">KEY PICK</div><div class="v">SYLAS</div><div class="d">藍方盲選，被認為會被懲罰</div></div>
+        <div class="stat"><div class="k">轉折</div><div class="v">20:00</div><div class="d">中路側翼，偷 Rakan 大招開團</div></div>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide" data-bg="Smolder_0.jpg" data-ch="落後的局面">
+      <div class="kicker">GAME 4 之前</div>
+      <h2>2–1 落後，只剩一條路：<em>高變異的選擇</em></h2>
+      <div class="sub">落後的一方不能選穩，只能選「贏得多、輸得也快」的策略。這是賽局裡的風險偏好問題，不是勇氣問題。</div>
+      <div class="rule"></div>
+      <div class="cards" style="grid-template-columns:repeat(3,1fr)">
+        <div class="card"><div class="lb">形勢</div><p>BLG 先拿下第三局，T1 被逼到淘汰邊緣。第四局藍方，BP 已經沒有「安全牌」。</p></div>
+        <div class="card"><div class="lb">選角</div><p>T1 藍方<b>盲選賽勒斯</b>中路；BLG 以 <b>史矛德</b> 對線，帳面上是克制。</p></div>
+        <div class="card"><div class="lb">賽局語言</div><p>在必須二連勝的條件下，期望值最高的不是「不失誤」，而是<b>製造更多可觀測的翻盤點</b>。</p></div>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide" data-bg="Sylas_0.jpg" data-ch="陣容">
+      <div class="kicker">GAME 4 · 選角</div>
+      <h2>他把對手的資源，變成<em>自己的資源</em></h2>
+      <div class="sub">賽勒斯的機制本身就是一句賽局宣言：<b>大絕可以偷</b>。你花錢買的優勢，可能在下一秒替我開團。</div>
+      <div class="rule"></div>
+      <div class="heroes" id="heroes"></div>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide" data-bg="Rakan_0.jpg" data-ch="轉折點">
+      <div class="kicker">20:00 · 中路側翼</div>
+      <h2>那一步往中路走，是<em>全場最貴的移動</em></h2>
+      <div class="mapwrap">
+        <div class="map">
+          <div class="river"></div>
+          <div class="lane mid"></div>
+          <div class="base b"></div><div class="base r"></div>
+          <div class="node red" style="left:50%;top:44%"><span>Faker · 賽勒斯</span></div>
+          <div class="node" style="left:64%;top:36%"><span>ON · 銳空（大招被偷）</span></div>
+          <div class="node blue" style="left:38%;top:64%"><span>T1 集結</span></div>
+          <div class="node" style="left:82%;top:16%"><span>Bin · 上路壓進</span></div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:12px"><div class="lb">發生了什麼</div>
+            <p>上路先被 BLG 的攻勢打穿，照理 T1 該收線止血。Faker 反而往中路側翼移動，貼上 ON 的銳空，用<b>劫取（Hijack）</b>拿到銳空的大絕，直接反開。</p></div>
+          <div class="card"><div class="lb">為什麼這是轉折</div>
+            <p>一個「本該用來逃跑」的技能，被改寫成開團的鑰匙。<b>成本照樣付，支付卻換了人</b>——這就是偷取型機制在賽局上的意義。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide" data-bg="Sylas_0.jpg" data-ch="拆解">
+      <div class="kicker">那一波的三層結構</div>
+      <h2>資訊、承諾、與<em>不對稱的支付</em></h2>
+      <div class="rule"></div>
+      <div class="cards" style="grid-template-columns:repeat(3,1fr)">
+        <div class="card"><div class="lb">01 資訊不對稱</div>
+          <p>BLG 的視野看不見那個側翼。賽勒斯的存在讓「安全位置」的定義被壓縮——<b>資訊差直接換成開團權</b>。</p></div>
+        <div class="card"><div class="lb">02 承諾問題</div>
+          <p>偷來的大絕只有幾秒。要不要現在開？慢半秒就沒了。<b>威脅必須可信，還必須即時</b>。</p></div>
+        <div class="card"><div class="lb">03 支付轉移</div>
+          <p>銳空的大絕本來是 BLG 的保險，卻變成 T1 的入場券。<b>把對手的資源挪來用，是這場逆轉的核心手法。</b></p></div>
+      </div>
+      <div class="sub" style="margin-top:26px">這一頁也是整份報告的縮影：<b>資源不變、規則不變，只把支付重新分配，均衡就變了。</b></div>
+    </section>
+
+    <!-- 6 -->
+    <section class="slide" data-bg="Sylas_1.jpg" data-ch="結果">
+      <div class="kicker">GAME 4 → GAME 5</div>
+      <h2>27 分鐘結束，系列賽被<em>拉回原點</em></h2>
+      <div class="rule"></div>
+      <div style="display:flex;gap:20px;align-items:stretch">
+        <div class="score" style="flex:1">
+          <div><div class="t">T1</div><div class="v win">2</div></div>
+          <div class="mid">GAME 4 結束</div>
+          <div><div class="t">BLG</div><div class="v">2</div></div>
+        </div>
+        <div class="score" style="flex:1">
+          <div><div class="t">T1</div><div class="v win">3</div></div>
+          <div class="mid">終場</div>
+          <div><div class="t">BLG</div><div class="v">2</div></div>
+        </div>
+      </div>
+      <div class="cards" style="grid-template-columns:repeat(2,1fr);margin-top:20px">
+        <div class="card"><div class="lb">連鎖</div><p>偷到的大絕換來一波團戰勝利 → 巴龍 → 27 分鐘收掉比賽。Faker 在第五局持續輸出，T1 完成二連霸，他拿到決賽 MVP。</p></div>
+        <div class="card"><div class="lb">意義</div><p>落後時的高變異選擇成功了。事後看是神操作，事前看是<b>唯一還能改變期望值的選項</b>。</p></div>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section class="slide" data-bg="Sylas_0.jpg" data-ch="賽局對照">
+      <div class="kicker">回到你的報告</div>
+      <h2>為什麼這一局能放進「公地悲劇」的簡報</h2>
+      <div class="rule"></div>
+      <div class="cards" style="grid-template-columns:repeat(2,1fr)">
+        <div class="card"><div class="lb">反面案例：資源的產權</div>
+          <p>銳空的大絕「屬於」BLG，但機制允許被偷。<b>產權不清的資源，隨時會被別人拿去用</b>——這是公地悲劇在峽谷裡的版本。</p></div>
+        <div class="card"><div class="lb">優勢策略</div>
+          <p>當對手有偷取型機制，「把關鍵技能留在手上」就不再是安全的選擇。理性會逼你把資源提早花掉。</p></div>
+        <div class="card"><div class="lb">納許均衡 ≠ 好結果</div>
+          <p>BLG 每一步都不算錯，結果卻是輸。均衡只保證「沒人能單方面改好」，不保證結果是好的。</p></div>
+        <div class="card"><div class="lb">重複賽局</div>
+          <p>BO5 還會再見面，所以「這局輸了也別崩」有價值。第五局就是重複賽局獎勵合作的證明。</p></div>
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section class="slide" data-bg="Smolder_0.jpg" data-ch="收束">
+      <div class="kicker">結論</div>
+      <div class="quote">落後的時候，能選的不是「穩」，而是「還有多少種贏的方法」。</div>
+      <div class="who">— 2024 世界大賽決賽，Game 4</div>
+      <div class="rule" style="margin-top:34px"></div>
+      <div class="sub">賽勒斯那一手不是浪漫，是<b>在期望值被壓到最低時，唯一還能把支付結構翻過來的動作</b>。<br>
+        這也是公地悲劇教我們的同一件事：規則決定行為，行為決定結局。</div>
+    </section>
+
+  </div>
+
+  <div class="rail">
+    <h5>對局資訊</h5>
+    <div class="row"><span>賽事</span><b>Worlds 2024</b></div>
+    <div class="row"><span>階段</span><b>總決賽 BO5</b></div>
+    <div class="row"><span>日期</span><b>2024-11-02</b></div>
+    <div class="row"><span>場地</span><b>O2 Arena</b></div>
+    <div class="row"><span>結果</span><b>3 : 2</b></div>
+    <div class="row"><span>FMVP</span><b>Faker</b></div>
+    <div class="note">資料來源：官方賽後報導與公開賽事紀錄（Dot Esports、One Esports、Hotspawn 等）。畫面僅供簡報示意，英雄美術版權屬 Riot Games。</div>
+  </div>
+
+  <div class="bottom">
+    <div>01 / 08</div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="keys">← → 切換<span>F</span>全螢幕</div>
+  </div>
+</div>
+
+<div id="rot">↻ 請把手機橫過來</div>
+<script>
+const DD = 'https://ddragon.leagueoflegends.com/cdn';
+const VER = '14.21.1';
+
+/* 英雄卡（Game 4 陣容示意） */
+const HEROES = [
+  {n:'Faker',   c:'Sylas',    role:'MID · MVP', big:true},
+  {n:'Zeus',    c:'Ornn',     role:'TOP'},
+  {n:'Oner',    c:'Nocturne', role:'JGL'},
+  {n:'Gumayusi',c:'Jhin',     role:'BOT'},
+  {n:'Keria',   c:'Renata',   role:'SUP'},
+];
+const heroBox = document.getElementById('heroes');
+HEROES.forEach((h,i)=>{
+  const d = document.createElement('div');
+  d.className = 'hero' + (h.big?' big':'');
+  d.style.animation = `in .5s ${.08*i}s both`;
+  d.innerHTML = `<img src="${DD}/img/champion/splash/${h.c}_0.jpg" alt="${h.c}"
+      onerror="this.style.display='none'">
+    <div class="cap"><small>${h.role}</small>${h.c}<br><b style="color:#c8aa6e">${h.n}</b></div>`;
+  heroBox.appendChild(d);
+});
+
+/* 目錄 */
+const slides = [...document.querySelectorAll('.slide')];
+const side = document.getElementById('side');
+side.innerHTML = '<h4>章節</h4>' + slides.map((s,i)=>
+  `<div class="chap" data-i="${i}"><div class="n">${String(i+1).padStart(2,'0')}</div>
+   <div class="t">${s.dataset.ch}</div></div>`).join('')
+  + '<div class="foot">專題：賽局理論 × 公地悲劇<br>案例：Worlds 2024 決賽<br>Game 4 · Sylas</div>';
+const chaps = [...side.querySelectorAll('.chap')];
+
+let cur = -1;
+function go(i){
+  i = Math.max(0, Math.min(slides.length-1, i));
+  if(i === cur) return;
+  cur = i;
+  slides.forEach(s=>s.classList.remove('show'));
+  slides[i].classList.add('show');
+  chaps.forEach(c=>c.classList.toggle('on', +c.dataset.i === i));
+  document.getElementById('bar').style.width = ((i+1)/slides.length*100)+'%';
+  document.querySelector('.bottom > div').textContent =
+    String(i+1).padStart(2,'0') + ' / ' + String(slides.length).padStart(2,'0');
+  const f = slides[i].dataset.bg;
+  if(f) document.getElementById('bgimg').src = `${DD}/img/champion/splash/${f}`;
+}
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown') go(cur+1);
+  if(e.key==='ArrowLeft'||e.key==='PageUp') go(cur-1);
+  if(e.key==='Home') go(0);
+  if(e.key==='End') go(slides.length-1);
+  if(e.key.toLowerCase()==='f') document.documentElement.requestFullscreen?.();
+});
+chaps.forEach(c=>c.onclick = ()=> go(+c.dataset.i));
+document.addEventListener('click', e=>{
+  if(e.target.closest('.chap')||e.target.closest('a')) return;
+  go(cur + (e.clientX > innerWidth/2 ? 1 : -1));
+});
+const h = parseInt((location.hash||'').replace('#',''),10);
+go(Number.isFinite(h) && h>0 ? h-1 : 0);
+function fit(){const W=1600,H=900,fr=document.querySelector('.frame');const rot=innerHeight>innerWidth*1.02;const s=Math.min(innerWidth/W,innerHeight/H);fr.style.transform=`translate(-50%,-50%) scale(${s})`;document.getElementById('rot').style.display=rot?'flex':'none';}
+addEventListener('resize', fit); fit();
+</script>
+</body>
+</html>
